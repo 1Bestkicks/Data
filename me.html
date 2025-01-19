@@ -274,7 +274,7 @@ async function saveToFirestore() {
     logoutButton.addEventListener("click", () => {
       signOut(auth).then(() => {
         alert("Successfully logged out!");
-        window.location.href = "sign.html";  // Redirect to sign-in page after logout
+        window.location.href = "index.html";  // Redirect to sign-in page after logout
       }).catch(error => {
         alert("Logout failed: " + error.message);
       });
