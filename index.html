@@ -75,7 +75,7 @@
       background-color: #f1f1f1;
     }
     button.deleteRow {
-      background-color: dark gray;
+      background-color: light blue;
       color: white;
       border: none;
       padding: 5px 10px;
@@ -116,30 +116,14 @@
       </table>
     </div>
   </div>
-  
   <script>
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      databaseURL: "YOUR_DATABASE_URL",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-  
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-  
     document.addEventListener("DOMContentLoaded", () => {
       const tableBody = document.querySelector("#dataTable tbody");
       const addRowButton = document.getElementById("addRow");
       const saveTableButton = document.getElementById("saveTable");
       const downloadTableButton = document.getElementById("downloadTable");
       const searchInput = document.getElementById("search");
-  
+
       function addRow(data = {}) {
         const row = document.createElement("tr");
         const imageData = data.image || "";
@@ -147,7 +131,7 @@
         const description = data.description || "";
         const price = data.price || "";
         const sellingPrice = data.sellingPrice || "";
-  
+
         row.innerHTML = `
           <td>
             <input type="file" accept="image/*">
@@ -161,30 +145,32 @@
           <td><input type="number" value="${sellingPrice}" placeholder="Selling Price"></td>
           <td><button class="deleteRow">Delete</button></td>
         `;
-  
+
         const fileInput = row.querySelector('input[type="file"]');
         const previewDiv = row.querySelector(".image-preview");
-  
+
         fileInput.addEventListener("change", () => {
           const file = fileInput.files[0];
           if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
               previewDiv.innerHTML = `<img src="${e.target.result}" alt="Product Image" style="max-width: 50px; max-height: 50px;">`;
+              saveToLocalStorage();
             };
             reader.readAsDataURL(file);
           }
         });
-  
+
         const deleteButton = row.querySelector(".deleteRow");
         deleteButton.addEventListener("click", () => {
           row.remove();
+          saveToLocalStorage();
         });
-  
+
         tableBody.appendChild(row);
       }
-  
-      function saveToFirebase() {
+
+      function saveToLocalStorage() {
         const rows = Array.from(tableBody.rows).map(row => {
           const cells = Array.from(row.cells);
           const image = cells[0].querySelector(".image-preview img")?.src || "";
@@ -192,28 +178,18 @@
           const description = cells[2].querySelector("input")?.value || "";
           const price = cells[3].querySelector("input")?.value || "";
           const sellingPrice = cells[4].querySelector("input")?.value || "";
-  
+
           return { image, name, description, price, sellingPrice };
         });
-  
-        // Save data to Firebase
-        database.ref("productTable").set(rows, (error) => {
-          if (error) {
-            console.error("Error saving data to Firebase:", error);
-            alert("Error saving data. Please try again.");
-          } else {
-            alert("Data successfully saved to Firebase.");
-          }
-        });
+
+        localStorage.setItem("productTable", JSON.stringify(rows));
       }
-  
-      function loadFromFirebase() {
-        database.ref("productTable").once("value", (snapshot) => {
-          const rows = snapshot.val() || [];
-          rows.forEach(data => addRow(data));
-        });
+
+      function loadFromLocalStorage() {
+        const savedRows = JSON.parse(localStorage.getItem("productTable") || "[]");
+        savedRows.forEach(data => addRow(data));
       }
-  
+
       function downloadTable() {
         const rows = Array.from(tableBody.rows).map(row => {
           const cells = Array.from(row.cells).map(cell => {
@@ -222,7 +198,7 @@
           });
           return cells;
         });
-  
+
         const csvContent = rows.map(row => row.join(",")).join("\n");
         const blob = new Blob([csvContent], { type: "text/csv" });
         const link = document.createElement("a");
@@ -230,7 +206,7 @@
         link.download = "table_data.csv";
         link.click();
       }
-  
+
       function filterRows() {
         const query = searchInput.value.toLowerCase();
         Array.from(tableBody.rows).forEach(row => {
@@ -241,16 +217,14 @@
           row.style.display = match ? "" : "none";
         });
       }
-  
+
       addRowButton.addEventListener("click", () => addRow());
-      saveTableButton.addEventListener("click", saveToFirebase);
+      saveTableButton.addEventListener("click", saveToLocalStorage);
       downloadTableButton.addEventListener("click", downloadTable);
       searchInput.addEventListener("input", filterRows);
-  
-      // Load data from Firebase on page load
-      loadFromFirebase();
+
+      loadFromLocalStorage();
     });
   </script>
-  
 </body>
 </html>
