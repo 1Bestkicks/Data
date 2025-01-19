@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+    }
+    .container {
+      background: #fff;
+      color: #333;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+    }
+    .container h1 {
+      margin-bottom: 20px;
+      font-size: 2rem;
+      color: #333;
+    }
+    .container input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    .container button {
+      width: 100%;
+      padding: 12px;
+      background: #6a11cb;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .container button:hover {
+      background: #2575fc;
+    }
+    .container p {
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+    .container a {
+      color: #6a11cb;
+      text-decoration: none;
+    }
+    .container a:hover {
+      text-decoration: underline;
+    }
+  </style>
+
+</head>
+<body>
+  <div class="container">
+    <h1>Sign In</h1>
+    <form id="signInForm">
+      <input type="email" id="email" placeholder="Enter your email" required>
+      <input type="password" id="password" placeholder="Enter your password" required>
+      <button type="submit">Sign In</button>
+    </form>
+    <p>Don't have an account? <a href="#">Sign up here</a></p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZnmKp9hyHaxXU3BKnuhRgbvLbpWgo3h4",
+      authDomain: "data-ff979.firebaseapp.com",
+      projectId: "data-ff979",
+      storageBucket: "data-ff979.appspot.com",
+      messagingSenderId: "277078720552",
+      appId: "1:277078720552:web:e9b741c7b57f3fca30b51d",
+      measurementId: "G-HNR24010T1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const signInForm = document.getElementById("signInForm");
+
+    signInForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        alert(`Welcome, ${userCredential.user.email}!`);
+        // Redirect to me.html after successful login
+        window.location.href = 'me.html';
+      } catch (error) {
+        console.error("Error signing in:", error.message);
+        alert("Error signing in: " + error.message);
+      }
+    });
+  </script>
+</body>
+</html>
