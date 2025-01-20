@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product Data Management</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="favicon.png" type="image/x-icon"> 
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -103,7 +102,7 @@
       <table id="dataTable">
         <thead>
           <tr>
-            <th>Image</th>
+            <th>Images</th>
             <th>Name</th>
             <th>Description</th>
             <th>Price</th>
@@ -159,13 +158,13 @@
 
     async function addRow(data = {}) {
       const row = document.createElement("tr");
-      const { image = "", name = "", description = "", price = "", sellingPrice = "" } = data;
+      const { images = [], name = "", description = "", price = "", sellingPrice = "" } = data;
 
       row.innerHTML = `
         <td>
-          <input type="file" accept="image/*">
+          <input type="file" accept="image/*" multiple>
           <div class="image-preview">
-            ${image ? `<img src="${image}" alt="Product Image" style="max-width: 50px; max-height: 50px;">` : ""}
+            ${images.map(image => `<img src="${image}" alt="Product Image" style="max-width: 50px; max-height: 50px;">`).join('')}
           </div>
         </td>
         <td><input type="text" value="${name}" placeholder="Product Name"></td>
@@ -179,15 +178,21 @@
       const previewDiv = row.querySelector(".image-preview");
 
       fileInput.addEventListener("change", () => {
-        const file = fileInput.files[0];
-        if (file) {
+        const files = Array.from(fileInput.files);
+        if (files.length > 4) {
+          alert("You can upload up to 4 images.");
+          return;
+        }
+        const imageUrls = [];
+        files.forEach(file => {
           const reader = new FileReader();
           reader.onload = (e) => {
-            previewDiv.innerHTML = `<img src="${e.target.result}" alt="Product Image" style="max-width: 50px; max-height: 50px;">`;
+            imageUrls.push(e.target.result);
+            previewDiv.innerHTML = imageUrls.map(url => `<img src="${url}" alt="Product Image" style="max-width: 50px; max-height: 50px;">`).join('');
             saveToFirestore();
           };
           reader.readAsDataURL(file);
-        }
+        });
       });
 
       const deleteButton = row.querySelector(".deleteRow");
@@ -199,39 +204,37 @@
       tableBody.appendChild(row);
     }
 
-    // Save product data to Firestore
-async function saveToFirestore() {
-  if (!currentUser) {
-    alert("User is not authenticated. Please sign in.");
-    return;
-  }
+    async function saveToFirestore() {
+      if (!currentUser) {
+        alert("User is not authenticated. Please sign in.");
+        return;
+      }
 
-  const rows = Array.from(tableBody.rows).map(row => {
-    const cells = Array.from(row.cells);
-    const image = cells[0].querySelector(".image-preview img")?.src || ""; // Correct image data handling
-    const name = cells[1].querySelector("input")?.value || "";
-    const description = cells[2].querySelector("input")?.value || "";
-    const price = cells[3].querySelector("input")?.value || "";
-    const sellingPrice = cells[4].querySelector("input")?.value || "";
+      const rows = Array.from(tableBody.rows).map(row => {
+        const cells = Array.from(row.cells);
+        const images = Array.from(cells[0].querySelectorAll(".image-preview img")).map(img => img.src);
+        const name = cells[1].querySelector("input")?.value || "";
+        const description = cells[2].querySelector("input")?.value || "";
+        const price = cells[3].querySelector("input")?.value || "";
+        const sellingPrice = cells[4].querySelector("input")?.value || "";
 
-    return { image, name, description, price, sellingPrice };
-  });
+        return { images, name, description, price, sellingPrice };
+      });
 
-  // If rows are empty, alert the user to add some products.
-  if (rows.length === 0) {
-    alert("Please add at least one product before saving.");
-    return;
-  }
+      if (rows.length === 0) {
+        alert("Please add at least one product before saving.");
+        return;
+      }
 
-  try {
-    const docRef = doc(db, "productData", currentUser.uid);
-    await setDoc(docRef, { products: rows });
-    alert("Data saved successfully!");
-  } catch (error) {
-    console.error("Error saving data: ", error);
-    alert("Error saving data: " + error.message);
-  }
-}
+      try {
+        const docRef = doc(db, "productData", currentUser.uid);
+        await setDoc(docRef, { products: rows });
+        alert("Data saved successfully!");
+      } catch (error) {
+        console.error("Error saving data: ", error);
+        alert("Error saving data: " + error.message);
+      }
+    }
 
     async function loadFromFirestore() {
       if (currentUser) {
@@ -275,7 +278,7 @@ async function saveToFirestore() {
     logoutButton.addEventListener("click", () => {
       signOut(auth).then(() => {
         alert("Successfully logged out!");
-        window.location.href = "index.html";  // Redirect to sign-in page after logout
+        window.location.href = "sign.html";  // Redirect to sign-in page after logout
       }).catch(error => {
         alert("Logout failed: " + error.message);
       });
